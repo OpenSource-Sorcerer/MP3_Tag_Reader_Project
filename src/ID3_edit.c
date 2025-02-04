@@ -208,17 +208,17 @@ void copy_frameData(int size, FILE *fptr_src, FILE *fptr_dup)
  */
 char* print_tag(const char *frame_ids[], char *tag)
 {
-    if(strcmp(frame_ids[0], tag))   return  "title";
+    if(!strcmp(frame_ids[0], tag))   return  "title";
 
-    else if(strcmp(frame_ids[1], tag))   return  "artist";
+    else if(!strcmp(frame_ids[1], tag))   return  "artist";
 
-    else if(strcmp(frame_ids[2], tag))   return  "album";
+    else if(!strcmp(frame_ids[2], tag))   return  "album";
 
-    else if(strcmp(frame_ids[3], tag))   return  "year";
+    else if(!strcmp(frame_ids[3], tag))   return  "year";
 
-    else if(strcmp(frame_ids[4], tag))   return  "content_type";
+    else if(!strcmp(frame_ids[4], tag))   return  "content_type";
 
-    else if(strcmp(frame_ids[5], tag))   return  "comment";
+    else if(!strcmp(frame_ids[5], tag))   return  "comment";
 
     else return NULL;
 }

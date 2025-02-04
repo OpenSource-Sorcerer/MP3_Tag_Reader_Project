@@ -1,7 +1,7 @@
 # MP3_Tag_Reader_Project
 
 ## Overview
-The **MP3 Tag Reader** project is designed to extract and display metadata from MP3 files, such as song title, artist, album,   year, genre, and other ID3 tag information. This tool allows users to retrieve and analyze MP3 metadata efficiently, making it useful for media organization, music library management, and automated tagging processes.
+The **MP3 Tag Reader** project is designed to extract and display metadata from MP3 files, such as song title, artist, album,   year, content type, and other ID3 tag information. This tool allows users to retrieve and analyze MP3 metadata efficiently, making it useful for media organization, music library management, and automated tagging processes.
 
 ## Features
 
