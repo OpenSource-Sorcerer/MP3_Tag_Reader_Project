@@ -26,4 +26,6 @@ void copy_frameData(int size, FILE *fptr_src, FILE *fptr_dup);
 /* 1st 6 Frame IDs */
 const char *frame_ids[] = {"-t","-a","-A","-y","-g","-c"};
 
+/* Print correct tag after modification on screen */
+char* print_tag(const char *frame_ids[], char *tag);
 #endif

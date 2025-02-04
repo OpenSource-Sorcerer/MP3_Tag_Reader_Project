@@ -8,13 +8,14 @@
  */
 Status edit_tags(File *file, EditTag *editTag)
 {
+    int chkpos1 = 0, chkpos2 = 0;
     //open files
     nibble.flag2 = open_files(file, editTag);
     if(!nibble.flag2)   return FAILURE;
-
+    
     //copy header contents
     copy_header(file->fptr_mp3, editTag->fptr_dup);
-
+    
     for(int index = 0; index < 6; index++)
     {
         //copy frame ID
@@ -26,13 +27,13 @@ Status edit_tags(File *file, EditTag *editTag)
 
         if(strcmp(frame_ids[index],editTag->usr_tag)) //different
         {
+            fseek(file->fptr_mp3, -4, SEEK_CUR);
             copy_4_bytes(file->fptr_mp3, editTag->fptr_dup);
         }
         else //same
         {
-            //write
             nibble.flag3 = 1;
-            fseek(file->fptr_mp3, 4, SEEK_CUR);
+         
             nibble.flag2 =  write_framedata_size((strlen(editTag->usr_data) + 1), editTag->fptr_dup);
             if(!nibble.flag2)   return FAILURE;
         }
@@ -43,14 +44,13 @@ Status edit_tags(File *file, EditTag *editTag)
         //copy frame data
         if(!nibble.flag3)
         {
-            copy_frameData(framedata_size, file->fptr_mp3, editTag->fptr_dup);
+            copy_frameData((framedata_size - 1), file->fptr_mp3, editTag->fptr_dup);
         }
         else//write frame data
         {
-            fwrite(editTag->usr_data, 1, strlen(editTag->usr_data), file->fptr_mp3);
-            //fputc('\0', file->fptr_mp3);
+            fwrite(editTag->usr_data, 1, strlen(editTag->usr_data) , editTag->fptr_dup);
 
-            fseek(file->fptr_mp3, framedata_size, SEEK_CUR);
+            fseek(file->fptr_mp3, framedata_size-1, SEEK_CUR);
             break;
         }
     }
@@ -58,6 +58,18 @@ Status edit_tags(File *file, EditTag *editTag)
     //Copy remaining data
     copy_remaining_data(file->fptr_mp3, editTag->fptr_dup);
 
+    //removed old file and renamed the duplicate file
+    remove(file->file_name);  
+    rename(editTag->file_name, file->file_name); 
+
+    fclose(editTag->fptr_dup);
+     
+    char *tag_name = print_tag(frame_ids, editTag->usr_tag);
+    printf("\n\033[1mSelected Tag  :   \033[1;37;44m %s \033[0m\n",tag_name);
+    printf("\n\033[1mTag Data      :   \033[1;37;44m %s \033[0m\n",editTag->usr_data);
+    printf("------------------------------------------------------------");
+    printf("\n                \033[1;37;43m DATA MODIFICATION COMPLETED \033[0m\n");
+    printf("------------------------------------------------------------\n");
     return SUCCESS;
 }
 
@@ -139,14 +151,17 @@ void copy_3_bytes(FILE *fptr_src, FILE *fptr_dup)
  */
 void copy_remaining_data(FILE *fptr_src, FILE *fptr_dup)
 {
-    char buffer[1];
-    // Read and write one character at a time
-    while (fread(buffer, 1, 1, fptr_src) > 0)
-    {
-        fwrite(buffer, 1, 1, fptr_dup);
-    }
+    char buffer[1024];
+    size_t bytes_read;
+    while ((bytes_read = fread(buffer, 1, sizeof(buffer), fptr_src)) > 0)
+        fwrite(buffer, 1, bytes_read, fptr_dup);
 }
 
+/* Writing User data's size
+ * Input : file poniters duplicate files, int value
+ * Output: writing the integer value into duplicate fil
+ * Return value : FAILURE / SUCCESS based on the fwrite function
+ */
 Status write_framedata_size(int size, FILE *fptr_dup) 
 {
     unsigned char buffer[4];
@@ -158,19 +173,52 @@ Status write_framedata_size(int size, FILE *fptr_dup)
     buffer[3] = size & 0xFF;
 
     // Write the size to file
-    if (fwrite(buffer, 1, 4, fptr_dup) != 4) {
+    if (fwrite(buffer, 1, 4, fptr_dup) != 4) 
+    {
         printf("Error: Failed to write frame data size\n");
         return FAILURE;
     }
-    printf("Written frame data size: %d\n", size);
     return SUCCESS;
 }
 
+/* Copying frame data
+ * Input : file poniters of src and duplicate files, int value
+ * Output: copying the data based on the integer value from src into duplicate file
+ * Return value : -------
+ */
 void copy_frameData(int size, FILE *fptr_src, FILE *fptr_dup)
 {
-    char buffer[size];
+    char *buffer = malloc(size);  // Dynamically allocate memory for the buffer
+    if (buffer == NULL) 
+    {
+        printf("Memory allocation failed\n");
+        return;
+    }
 
     fread(buffer, 1, size, fptr_src);
-
     fwrite(buffer, 1, size, fptr_dup);
+
+    free(buffer);  
+}
+
+/* Printing the tag name
+ * Input : frame id string, user tag
+ * Output: compares the frame_ids elements with user tag
+ * Return value : SUitable tag name
+ */
+char* print_tag(const char *frame_ids[], char *tag)
+{
+    if(strcmp(frame_ids[0], tag))   return  "title";
+
+    else if(strcmp(frame_ids[1], tag))   return  "artist";
+
+    else if(strcmp(frame_ids[2], tag))   return  "album";
+
+    else if(strcmp(frame_ids[3], tag))   return  "year";
+
+    else if(strcmp(frame_ids[4], tag))   return  "content_type";
+
+    else if(strcmp(frame_ids[5], tag))   return  "comment";
+
+    else return NULL;
 }

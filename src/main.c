@@ -70,10 +70,7 @@ OperationType chk_operation_type(char *argv[])
     {
         if(argv[2] == NULL) return VERSION;
 
-        else if(strstr(argv[2],".mp3"))
-        {
-            return VIEW;
-        }
+        else if(strstr(argv[2],".mp3"))     return VIEW;
     }
     else if(!(strcmp(argv[1],"--help")))    return HELP;    //help
     
